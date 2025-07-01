@@ -1,0 +1,122 @@
+<?php
+require('fpdf/fpdf.php');
+require 'includes/db.php';
+session_start();
+
+if (!isset($_SESSION['student_id'])) {
+    die('Unauthorized access');
+}
+
+$student_id = $_SESSION['student_id'];
+
+// Fetch student info
+$stmt = $pdo->prepare("SELECT s.full_name, s.matricule, p.name AS program_name, f.name AS faculty_name 
+                       FROM students s
+                       JOIN programs p ON s.program_id = p.id
+                       JOIN faculties f ON p.faculty_id = f.id
+                       WHERE s.id = ?");
+$stmt->execute([$student_id]);
+$student = $stmt->fetch();
+
+// Fetch marks grouped by semester
+$stmt = $pdo->prepare("SELECT m.semester, c.course_code, c.course_name, c.credit_value,
+                              m.ca_mark, m.exam_mark, (m.ca_mark + m.exam_mark) AS total
+                       FROM marks m
+                       JOIN courses c ON m.course_id = c.id
+                       WHERE m.student_id = ?
+                       ORDER BY m.semester, c.course_code");
+$stmt->execute([$student_id]);
+$all_marks = $stmt->fetchAll();
+
+// Group marks by semester
+$semester_marks = [];
+foreach ($all_marks as $row) {
+    $semester = $row['semester'];
+    $semester_marks[$semester][] = $row;
+}
+
+// Grade function
+function getGradePoint($total) {
+    if ($total >= 80) return ['A', 4.0];
+    if ($total >= 70) return ['B+', 3.5];
+    if ($total >= 60) return ['B', 3.0];
+    if ($total >= 50) return ['C', 2.0];
+    if ($total >= 40) return ['D', 1.0];
+    return ['F', 0.0];
+}
+
+// Begin PDF
+$pdf = new FPDF();
+$pdf->AddPage();
+$pdf->SetFont('Arial','B',16);
+$pdf->Cell(0,10,'Academic Transcript',0,1,'C');
+$pdf->Ln(5);
+
+// Student Info
+$pdf->SetFont('Arial','',12);
+$pdf->Cell(0,10,'Name: ' . $student['full_name'],0,1);
+$pdf->Cell(0,10,'Matricule: ' . $student['matricule'],0,1);
+$pdf->Cell(0,10,'Faculty: ' . $student['faculty_name'],0,1);
+$pdf->Cell(0,10,'Program: ' . $student['program_name'],0,1);
+$pdf->Ln(8);
+
+// Initialize cumulative GPA vars
+$cum_credits = 0;
+$cum_points = 0;
+
+foreach ($semester_marks as $semester => $marks) {
+    $pdf->SetFont('Arial','B',13);
+    $pdf->Cell(0,10,'Semester ' . $semester,0,1);
+    
+    // Table header
+    $pdf->SetFont('Arial','B',11);
+    $pdf->Cell(30,10,'Code',1);
+    $pdf->Cell(55,10,'Course Name',1);
+    $pdf->Cell(15,10,'Cr.',1);
+    $pdf->Cell(15,10,'CA',1);
+    $pdf->Cell(20,10,'Exam',1);
+    $pdf->Cell(20,10,'Total',1);
+    $pdf->Cell(15,10,'Grade',1);
+    $pdf->Cell(20,10,'Points',1);
+    $pdf->Ln();
+
+    // Table data
+    $pdf->SetFont('Arial','',11);
+    $sem_credits = 0;
+    $sem_points = 0;
+
+    foreach ($marks as $row) {
+        [$grade, $point] = getGradePoint($row['total']);
+        $gpa_point = $point * $row['credit_value'];
+        $sem_credits += $row['credit_value'];
+        $sem_points += $gpa_point;
+
+        $pdf->Cell(30,10,$row['course_code'],1);
+        $pdf->Cell(55,10,substr($row['course_name'], 0, 28),1);
+        $pdf->Cell(15,10,$row['credit_value'],1,0,'C');
+        $pdf->Cell(15,10,$row['ca_mark'],1,0,'C');
+        $pdf->Cell(20,10,$row['exam_mark'],1,0,'C');
+        $pdf->Cell(20,10,$row['total'],1,0,'C');
+        $pdf->Cell(15,10,$grade,1,0,'C');
+        $pdf->Cell(20,10,round($gpa_point, 2),1,0,'C');
+        $pdf->Ln();
+    }
+
+    // Semester GPA
+    $semester_gpa = $sem_credits > 0 ? round($sem_points / $sem_credits, 2) : 'N/A';
+    $pdf->SetFont('Arial','B',12);
+    $pdf->Cell(0,10,"Semester GPA: " . $semester_gpa,0,1,'R');
+
+    $pdf->Ln(5);
+
+    // Accumulate for CGPA
+    $cum_credits += $sem_credits;
+    $cum_points += $sem_points;
+}
+
+// Cumulative GPA
+$pdf->SetFont('Arial','B',14);
+$pdf->Cell(0,10,'Cumulative GPA: ' . ($cum_credits > 0 ? round($cum_points / $cum_credits, 2) : 'N/A'),0,1,'C');
+
+$pdf->Output('I', 'Transcript.pdf');
+?>
