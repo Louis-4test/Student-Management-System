@@ -1,5 +1,6 @@
 <?php
-require_once 'includes/auth.php';
+require_once('../includes/auth.php');
+
 logout();
 
 session_start();

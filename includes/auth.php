@@ -1,5 +1,5 @@
 <?php
-session_start();
+
 
 /**
  * Check if student is logged in, else redirect to login page

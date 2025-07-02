@@ -74,7 +74,7 @@ if (!isset($_SESSION['admin_id'])) {
         <ul>
             <li><a href="student.php">📋 Manage Students (Add / View / Edit / Delete)</a></li>
             <li><a href="manage_course.php">📚 Manage Courses (Add / View / Edit / Delete)</a></li>
-            <li><a href="marks.php">📝 Manage Marks (Upload / Edit / Delete)</a></li>
+            <li><a href="upload_mark.php">📝 Manage Marks (Upload / Edit / Delete)</a></li>
             <li><a href="logout.php" class="logout">🚪 Logout</a></li>
         </ul>
     </div>
