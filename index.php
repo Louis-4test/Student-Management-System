@@ -1,18 +1,10 @@
 <?php
 require_once 'includes/db.php';
 
-// Fetch data with prepared statements for best practice
-$facultiesStmt = $pdo->prepare("SELECT * FROM faculties");
-$facultiesStmt->execute();
-$faculties = $facultiesStmt->fetchAll(PDO::FETCH_ASSOC);
-
-$departmentsStmt = $pdo->prepare("SELECT * FROM departments");
-$departmentsStmt->execute();
-$departments = $departmentsStmt->fetchAll(PDO::FETCH_ASSOC);
-
-$coursesStmt = $pdo->prepare("SELECT * FROM courses");
-$coursesStmt->execute();
-$courses = $coursesStmt->fetchAll(PDO::FETCH_ASSOC);
+// Fetch data
+$faculties = $pdo->query("SELECT * FROM faculties")->fetchAll(PDO::FETCH_ASSOC);
+$departments = $pdo->query("SELECT * FROM departments")->fetchAll(PDO::FETCH_ASSOC);
+$courses = $pdo->query("SELECT * FROM courses")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -20,26 +12,70 @@ $courses = $coursesStmt->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>School Management System - Home</title>
+    <title>Student Management System - Home</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f7fa;
             margin: 0;
             padding: 0;
+            background: #f5f7fa;
             color: #333;
         }
 
-        header, footer {
-            background: #007BFF;
-            color: white;
-            padding: 18px 0;
-            text-align: center;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
+        /* === NAVBAR === */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #007BFF;
+            padding: 14px 20px;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
+        .nav-logo {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            margin: 10px 0;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .nav-links li a:hover {
+            color: #ffd966;
+        }
+
+        .nav-register {
+            background-color: #ffc107;
+            color: #333;
+            padding: 10px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+
+        .nav-register:hover {
+            background-color: #e0a800;
+            color: white;
+        }
+
+        /* === CONTENT === */
         .container {
             max-width: 1100px;
             margin: 30px auto 60px;
@@ -50,7 +86,7 @@ $courses = $coursesStmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         p.intro {
-            line-height: 1.6;
+            line-height: 1.7;
             font-size: 1.1rem;
             color: #555;
             margin-bottom: 25px;
@@ -100,6 +136,7 @@ $courses = $coursesStmt->fetchAll(PDO::FETCH_ASSOC);
             background: #17a2b8;
             box-shadow: 0 3px 7px rgba(23,162,184,0.5);
         }
+
         a.button.register:hover {
             background: #117a8b;
         }
@@ -108,6 +145,7 @@ $courses = $coursesStmt->fetchAll(PDO::FETCH_ASSOC);
             background: #28a745;
             box-shadow: 0 3px 7px rgba(40,167,69,0.5);
         }
+
         a.button.admin:hover {
             background: #1e7e34;
         }
@@ -122,7 +160,6 @@ $courses = $coursesStmt->fetchAll(PDO::FETCH_ASSOC);
             letter-spacing: 0.05em;
         }
 
-        /* Faculty Cards Grid */
         .faculties-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -138,22 +175,13 @@ $courses = $coursesStmt->fetchAll(PDO::FETCH_ASSOC);
             flex-direction: column;
             transition: transform 0.2s ease;
         }
+
         .faculty-card:hover {
             transform: translateY(-5px);
         }
 
-        .faculty-img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            border-bottom: 4px solid #007BFF;
-        }
-
         .faculty-content {
             padding: 20px;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
         }
 
         .faculty-title {
@@ -163,33 +191,17 @@ $courses = $coursesStmt->fetchAll(PDO::FETCH_ASSOC);
             font-weight: 700;
         }
 
-        /* Department Cards inside faculty */
         .departments-list {
-            margin-top: 10px;
-            padding-left: 0;
             list-style: none;
+            padding-left: 0;
         }
+
         .department-item {
             background: #f9fafb;
             margin-bottom: 14px;
             border-radius: 8px;
             padding: 15px;
             box-shadow: 0 3px 7px rgba(0,0,0,0.05);
-            display: flex;
-            gap: 15px;
-        }
-
-        .department-img {
-            flex-shrink: 0;
-            width: 90px;
-            height: 90px;
-            border-radius: 8px;
-            object-fit: cover;
-            border: 2px solid #17a2b8;
-        }
-
-        .department-content {
-            flex-grow: 1;
         }
 
         .department-name {
@@ -205,6 +217,7 @@ $courses = $coursesStmt->fetchAll(PDO::FETCH_ASSOC);
             list-style: disc;
             color: #555;
         }
+
         .courses-list li {
             margin-bottom: 5px;
             font-weight: 600;
@@ -215,18 +228,6 @@ $courses = $coursesStmt->fetchAll(PDO::FETCH_ASSOC);
             color: #666;
         }
 
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .department-item {
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
-            }
-            .department-content {
-                padding-top: 10px;
-            }
-        }
-
         footer {
             margin-top: 60px;
             padding: 15px 0;
@@ -234,31 +235,48 @@ $courses = $coursesStmt->fetchAll(PDO::FETCH_ASSOC);
             color: #888;
             background: #f1f3f5;
             text-align: center;
-            letter-spacing: 0.03em;
         }
 
-        .small-link {
-            font-size: 14px;
-            color: #555;
-            margin-top: 8px;
-        }
+        /* Responsive Navbar */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
 
-        .small-link a {
-            color: #007BFF;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        .small-link a:hover {
-            text-decoration: underline;
+            .nav-links {
+                flex-direction: column;
+                gap: 10px;
+                margin-top: 10px;
+            }
+
+            .nav-register {
+                margin-top: 10px;
+                align-self: flex-start;
+            }
         }
     </style>
 </head>
 <body>
+
+<!-- Navigation Header -->
 <header>
-    <h1>Welcome to the Students Management System</h1>
+    <nav class="navbar">
+        <div class="nav-logo">Student System</div>
+        <ul class="nav-links">
+            <li><a href="index.php">Home</a></li>
+            <li><a href="#academics">Academics</a></li>
+            <li><a href="#students">Students</a></li>
+            <li><a href="#contact">Contact Us</a></li>
+        </ul>
+        <a href="register.php" class="nav-register">Register</a>
+    </nav>
 </header>
 
+<!-- Page Content -->
 <div class="container">
+
+    <!-- New Intro Paragraphs -->
     <p class="intro">
         YIBS offers career development programs that are industry-focused and are designed to meet new market
         trends for emerging economies. We aim to imbue in students a career focus and a vision for a lasting 
@@ -285,58 +303,47 @@ $courses = $coursesStmt->fetchAll(PDO::FETCH_ASSOC);
         <li>Business Services</li>
     </ul>
 
-    <div class="button-section">
-        <a href="register.php" class="button register">Register as a Student</a>
-        <div class="small-link">Already have an account? <a href="login.php">Login here</a></div>
+    <div class="button-section" id="students">
+        <a href="login.php" class="button register">Login as Student</a>
         <a href="admin/login.php" class="button admin">Admin Access</a>
     </div>
 
-    <h2 class="section-title">Faculties & Departments</h2>
+    <h2 id="academics" class="section-title">Faculties & Departments</h2>
 
     <div class="faculties-grid">
         <?php foreach ($faculties as $faculty): ?>
-            <article class="faculty-card" aria-labelledby="faculty-<?= htmlspecialchars($faculty['id']) ?>">
-                <img 
-                    class="faculty-img" 
-                    src="<?= htmlspecialchars($faculty['image_url'] ?? 'https://via.placeholder.com/400x180?text=Faculty+Image') ?>" 
-                    alt="<?= htmlspecialchars($faculty['faculty_name'] ?: 'Faculty Image') ?>"
-                    loading="lazy"
-                />
+            <div class="faculty-card">
                 <div class="faculty-content">
-                    <h3 id="faculty-<?= htmlspecialchars($faculty['id']) ?>" class="faculty-title"><?= htmlspecialchars($faculty['faculty_name']) ?></h3>
+                    <h3 class="faculty-title"><?= htmlspecialchars($faculty['name']) ?></h3>
                     <ul class="departments-list">
                         <?php foreach ($departments as $dept): ?>
                             <?php if ($dept['faculty_id'] == $faculty['id']): ?>
                                 <li class="department-item">
-                                    <img 
-                                        class="department-img" 
-                                        src="<?= htmlspecialchars($dept['image_url'] ?? 'https://via.placeholder.com/90?text=Dept') ?>" 
-                                        alt="<?= htmlspecialchars($dept['department_name'] ?: 'Department Image') ?>" 
-                                        loading="lazy"
-                                    />
-                                    <div class="department-content">
-                                        <div class="department-name"><?= htmlspecialchars($dept['department_name']) ?></div>
-                                        <ul class="courses-list">
-                                            <?php foreach ($courses as $course): ?>
-                                                <?php if ($course['department_id'] == $dept['id']): ?>
-                                                    <li>
-                                                        <span class="code"><?= htmlspecialchars($course['course_code']) ?></span> - 
-                                                        <?= htmlspecialchars($course['course_name']) ?>
-                                                        (Sem <?= (int)$course['semester'] ?>, <?= (int)$course['credit_value'] ?> Credits)
-                                                    </li>
-                                                <?php endif; ?>
-                                            <?php endforeach; ?>
-                                        </ul>
-                                    </div>
+                                    <div class="department-name"><?= htmlspecialchars($dept['name']) ?></div>
+                                    <ul class="courses-list">
+                                        <?php foreach ($courses as $course): ?>
+                                            <?php if ($course['department_id'] == $dept['id']): ?>
+                                                <li>
+                                                    <span class="code"><?= htmlspecialchars($course['course_code']) ?></span> -
+                                                    <?= htmlspecialchars($course['course_name']) ?> (Sem <?= (int)$course['semester'] ?>, <?= (int)$course['credit_value'] ?> Credits)
+                                                </li>
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    </ul>
                                 </li>
                             <?php endif; ?>
                         <?php endforeach; ?>
                     </ul>
                 </div>
-            </article>
+            </div>
         <?php endforeach; ?>
     </div>
+</div>
 
-    <hr />
-    <p style="text-align:center; color: #666; margin-top: 40px;">
-        Only students with a
+<!-- Footer -->
+<footer id="contact">
+    &copy; <?= date('Y') ?> Student Management System. All Rights Reserved.
+</footer>
+
+</body>
+</html>

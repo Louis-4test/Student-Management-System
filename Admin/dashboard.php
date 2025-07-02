@@ -59,13 +59,28 @@ if (!isset($_SESSION['admin_id'])) {
             background: #0056b3;
         }
 
-        .logout {
-            background: #dc3545;
+        .top-bar {
+        display: flex;
+        justify-content: flex-end;
+        background-color: #f8f9fa;
+        padding: 10px 20px;
+        border-bottom: 1px solid #ccc;
         }
 
-        .logout:hover {
-            background: #b02a37;
+        .logout-btn {
+            background-color: #dc3545; /* Bootstrap red */
+            color: white;
+            padding: 10px 16px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
         }
+
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+
     </style>
 </head>
 <body>
@@ -75,7 +90,11 @@ if (!isset($_SESSION['admin_id'])) {
             <li><a href="student.php">📋 Manage Students (Add / View / Edit / Delete)</a></li>
             <li><a href="manage_course.php">📚 Manage Courses (Add / View / Edit / Delete)</a></li>
             <li><a href="upload_mark.php">📝 Manage Marks (Upload / Edit / Delete)</a></li>
-            <li><a href="logout.php" class="logout">🚪 Logout</a></li>
+            <div class="top-bar">
+                <a href="logout.php" class="logout-btn" onclick="return confirm('Are you sure you want to logout?')">Logout</a>
+            </div>
+
+
         </ul>
     </div>
 </body>
